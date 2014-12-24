@@ -10,7 +10,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+
+import static android.view.View.OnTouchListener;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -24,6 +27,7 @@ public class MainActivity extends ActionBarActivity {
     private float y;
     private float vx=1;
     private float vy=1;
+    private static final String TAG = "Penguin!";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,28 +69,53 @@ public class MainActivity extends ActionBarActivity {
                 canvas.restore();
 
                 //let's draw a circle
-                mPaint.setColor(0xffffffff); // White
+                mPaint.setColor(0x80ffffff); // White
                 mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-                canvas.drawCircle(mPHwidth, mPHheight, mPHheight, mPaint);
 
                 float angle = SystemClock.uptimeMillis() / 10.0f;
                 canvas.translate(x,y);
+                //we can draw the circle after translation
+
+                canvas.drawCircle(mPHwidth, mPHheight, mPHheight, mPaint);
                 canvas.rotate(angle, mPHwidth, mPHheight);
                 canvas.drawBitmap(mPenguin,0,0,null);
+                if( y + 2*mPHheight +vy +1 >= this.getHeight()){
+                    vy = -0.8f*vy;
+                } else {
+                    vy = vy +1;
+                }
+                x = x +vx;
+                y = y +vy;
+                //Let's add some gravity/acceleration
+
 
                 //let's make some trick to make the Penguin move:
                 //The solution is not use a loop
                 // In 20ms (1/50th second) this view will need to be redrawn
                 postInvalidateDelayed(20);//it could be used for sensor measurement
 
-                x = x +vx;
-                y = y +vy;
+
             }
         };
 
         //image.setImageBitmap(b);
 
         setContentView(v);
+
+        OnTouchListener onTouch = new OnTouchListener(){
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                Log.d(TAG,"onTouch!"+event.getAction());
+                //it's possible to get X and Y value where the user is touching
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    x = event.getX();
+                    y = event.getY();
+                }
+                return true;
+            }
+        };
+        v.setOnTouchListener(onTouch);
     }
 
 
