@@ -20,33 +20,39 @@ public class MainActivity extends ActionBarActivity {
 
     private Bitmap mBitmap;
     private Bitmap mPenguin;
-    private int mPHwidth;
-    private int mPHheight;
+    private int mPHwidth; // Penguin half width
+    private int mPHheight; // Penguin half height
     private Paint mPaint;
     private float x;
     private float y;
     private float vx=1;
     private float vy=1;
     private static final String TAG = "Penguin!";
+    private boolean mTouching;
+    private Canvas mCanvas;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //Resources resources = getResources();
-        mPenguin = BitmapFactory.decodeResource(getResources(),R.drawable.rain_penguin_180);
+        Bitmap original = BitmapFactory.decodeResource(getResources(),R.drawable.rain_penguin_180);
+        int desired = getResources().getDimensionPixelSize(R.dimen.penguin);
+        mPenguin = Bitmap.createScaledBitmap(original, desired, desired, true);
         // Calculate the half width and height
         mPHwidth = mPenguin.getWidth() / 2;
         mPHheight = mPenguin.getHeight() / 2;
 
-        mBitmap = Bitmap.createBitmap(4,4, Bitmap.Config.ARGB_8888);
-        Canvas c = new Canvas(mBitmap);
+        mBitmap = Bitmap.createBitmap(256,256, Bitmap.Config.ARGB_8888);
+        mCanvas = new Canvas(mBitmap);
         mPaint = new Paint();
+        mPaint.setStrokeWidth(0);
         //Let's draw something on the bitmap then:
-        c.drawColor(0xff808080); //gray color or grey
+        //mCanvas.drawColor(0xff808080); //gray color or grey
+        mCanvas.drawColor(0xffff8000); //orange
         //Configure mPaint color (blue)
-        mPaint.setColor(0xff0000ff);
+        //mPaint.setColor(0xff0000ff);
         //lets draw a line:
-        c.drawLine(0,0,3,3, mPaint);
+        //mCanvas.drawLine(0, 0, 3, 3, mPaint);
 
         //Let's say goodbye to ImageView
         //ImageView image = new ImageView(this);
@@ -74,6 +80,13 @@ public class MainActivity extends ActionBarActivity {
 
                 float angle = SystemClock.uptimeMillis() / 10.0f;
                 canvas.translate(x,y);
+
+                if (mTouching){
+                    // Scale up the canvas coordinates system 20%,
+                    // Just before drawing the circle and the penguin
+                    canvas.scale(1.2f, 1.2f, mPHwidth, mPHheight);
+                }
+
                 //we can draw the circle after translation
 
                 canvas.drawCircle(mPHwidth, mPHheight, mPHheight, mPaint);
@@ -107,11 +120,30 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 Log.d(TAG,"onTouch!"+event.getAction());
-                //it's possible to get X and Y value where the user is touching
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    x = event.getX();
-                    y = event.getY();
+                // Log.d(TAG, "onTouch!" + event.getAction());
+                // This app is not multi-touch aware:
+                // When the user performs a multi-touch event the app will get
+                // some large action values (because the 'action' parameter
+                // encodes additional multi-touch information)
+                // So they are ignored by the app
+                int action = event.getAction();
+                if (action == MotionEvent.ACTION_UP
+                        || action == MotionEvent.ACTION_CANCEL) {
+                    mTouching = false;
                 }
+                if (action == MotionEvent.ACTION_DOWN) {
+                    mTouching = true;
+                }
+
+                if (action == MotionEvent.ACTION_DOWN
+                        || action == MotionEvent.ACTION_MOVE) {
+                    //it's possible to get X and Y value where the user is touching
+                    x = event.getX() - mPHheight;
+                    y = event.getY() - mPHwidth;
+                    vx = 0;
+                    vy = 0;
+                }
+                
                 return true;
             }
         };
