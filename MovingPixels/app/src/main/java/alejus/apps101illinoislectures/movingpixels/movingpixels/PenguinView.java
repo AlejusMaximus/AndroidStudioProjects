@@ -1,11 +1,14 @@
 package alejus.apps101illinoislectures.movingpixels.movingpixels;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -15,7 +18,7 @@ import android.view.View;
  * Created by aleix on 28/12/14.
  */
 //It's not allowed to use the word static if it's a top level class
-public class PenguinView extends View {
+public class PenguinView extends View implements SharedPreferences.OnSharedPreferenceChangeListener{
     //public static class -> problem; cannot see the fields that we defined inside out main activity
     //in order to solve this we can put this fields inside our PenguinView class:
     //Then our PenguinView class barely will need to talk with the outside world
@@ -34,6 +37,11 @@ public class PenguinView extends View {
     private static final String TAG = "Penguin!";
     private boolean mTouching;
     private Canvas mCanvas;
+    private TextPaint mTextPaint;
+    private String mPenguinName;
+    
+    private SharedPreferences mPrefs;
+    private boolean mEnableGravity;
     //Then everything is good except for the init code inside onCreate method->
     //Let's put it inside our constructor
 
@@ -61,8 +69,29 @@ public class PenguinView extends View {
         init();
 
     }
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences p, String key) {
+        // Simple but inefficient:
+        // For each preference item that changes we will read all of the preferences again
+        mPenguinName = mPrefs.getString("name", "no name");
+        mEnableGravity = mPrefs.getBoolean("gravity", true);
+    }
 
     private void init() {
+        //OLD
+        /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        mPenguinName = prefs.getString("name","no name"); //faster, but we are writing text on every frame*/
+        
+        //In order to update the sharedpreferences
+        mPrefs = PreferenceManager
+                .getDefaultSharedPreferences(getContext());
+        // If we are going to cache the name and gravity
+        // Then we better find out when they are changed
+        mPrefs.registerOnSharedPreferenceChangeListener(this);
+
+        onSharedPreferenceChanged(null, null);// Use the code above to read the preferences
+        
+
         //Resources resources = getResources();
         Bitmap original = BitmapFactory.decodeResource(getResources(), R.drawable.rain_penguin_180);
         int desired = getResources().getDimensionPixelSize(R.dimen.penguin);
@@ -73,6 +102,11 @@ public class PenguinView extends View {
 
         mBitmap = Bitmap.createBitmap(256,256, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
+
+        mTextPaint = new TextPaint();
+        mTextPaint.setTextSize(64);
+        mTextPaint.setColor(0x800000ff);//semi-transparent, no red, no green, more blue
+
         mPaint = new Paint();
         mPaint.setStrokeWidth(0);
         //Let's draw something on the bitmap then:
@@ -138,6 +172,9 @@ public class PenguinView extends View {
     }
 
     private void doPenguinPhysics() {
+        if (!mEnableGravity) { // ! means not
+            return;
+        }
         //Let's add some gravity/acceleration
         if( y + 2*mPHheight +vy +1 >= this.getHeight()){
             vy = -0.8f*vy;
@@ -152,6 +189,7 @@ public class PenguinView extends View {
         //let's draw a circle
         mPaint.setColor(0x80ffffff); // White
         mPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        mPaint.setFilterBitmap(false);
 
         float angle = SystemClock.uptimeMillis() / 10.0f;
         canvas.translate(x,y);
@@ -166,7 +204,14 @@ public class PenguinView extends View {
 
         canvas.drawCircle(mPHwidth, mPHheight, mPHheight, mPaint);
         canvas.rotate(angle, mPHwidth, mPHheight);
-        canvas.drawBitmap(mPenguin,0,0,null);
+        //Takes to much time to read every time the penguin is drawn the preferences:
+        /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String name = prefs.getString("name","no name");*/
+        //it's better to use a variable:
+        
+        canvas.drawText(mPenguinName,300,300,mTextPaint);
+
+        canvas.drawBitmap(mPenguin, 0, 0, null);
     }
 
     private void drawBackground(Canvas canvas) {

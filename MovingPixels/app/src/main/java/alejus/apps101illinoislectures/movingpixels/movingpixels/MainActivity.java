@@ -1,6 +1,7 @@
 package alejus.apps101illinoislectures.movingpixels.movingpixels;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -43,9 +44,6 @@ public class MainActivity extends ActionBarActivity {
         return true;
     }
 
-
-
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -55,6 +53,10 @@ public class MainActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+
+            Intent i = new Intent(this,SettingsActivity.class);
+            startActivity(i);
+
             return true;
         }
 
