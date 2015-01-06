@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string-array name="messages">
+        <item>\"UIUC\" + 2 + 6 will give you \"UIUC26\", not \"UIUC8\"</item>
+        <item>Random Java Facts - original list by CS@Illinois students</item>
+        <item>Statements are separated by ;</item>
+        <item>int and long are primitives</item>
+        <item>float and double are primitives</item>
+        <item>+-*/! are operators</item>
+        <item>! means \"not\" e.g. \"! true\" is false</item>
+        <item>result++; means add one to result</item>
+        <item tools:ignore="TypographyDashes">result--; means subtract one from result</item>
+        <item>result+=1; adds one to result</item>
+        <item>Integer.parseInt(\"123\") returns 123</item>
+        <item>String.valueOf(123) returns \"123\"</item>
+        <item>String+int is a String: \"A\"+123 is \"A123\"</item>
+        <item>Empty String+int is a common trick: \"\"+count</item>
+        <item>\"red\"+123 is \"red123\"</item>
+        <item>// Is a comment</item>
+        <item>/* I\'m a comment from there to here */</item>
+        <item>* means multiply</item>
+        <item tools:ignore="TypographyFractions">3/4 is zero! (integer division)</item>
+        <item>= means assign e.g. result=2+2;</item>
+        <item>Use == to compare primitive values</item>
+        <item>Use == to check for null</item>
+        <item>int a=3,b=3; a==b will evaluate true</item>
+        <item>Use .equals to compare strings</item>
+        <item>\"hello\" is a String</item>
+        <item>if(a&gt;3) { /* a is too big! */}</item>
+        <item>&amp;&amp; means \'and\'</item>
+        <item>|| means \'or\'</item>
+        <item>if( &#8230; ) { &#8230; }</item>
+        <item>if( &#8230; ) { &#8230; } else { &#8230; }</item>
+        <item>if( score &gt; 100 ) { }</item>
+        <item>boolean perfect = score == 100;</item>
+        <item>if( score &gt; best) { best=score;}</item>
+        <item>static variables live almost forever!</item>
+        <item>String x; // x is just a pointer</item>
+        <item>String x=\"hat\";\nint len=x.length();//len is 3</item>
+        <item>In Android only use static variables for simple constants</item>
+        <item>boolean happy; Boolean variables are primitive</item>
+        <item>Primitive variables store their values directly.</item>
+        <item>return 42; exit this method and return the int value</item>
+        <item>if(score==100) return; /* RETURN EARLY */</item>
+        <item>while(true) { &#8230; if(&#8230;) break;}</item>
+        <item>while(moreTodo) { &#8230; if(&#8230;) moreTodo=false;}</item>
+        <item>for(int i=0;i&lt;10;i++) { &#8230; }</item>
+        <item>for(int id: list) {}</item>
+        <item>String a=\"Hello\";String b=\"Hello\"; \"a==b\" compares pointers not values!</item>
+        <item>For strings: s.length() For arrays: array.length</item>
+        <item>arr.length is the size of an array</item>
+        <item>arr.length and arr[0].length is the size of a regular 2D array</item>
+        <item>Be aware of negative modulo (-25)%%7 == -(25%%7)</item>
+        <item>Swap two pointers or values \'a\' and \'b\': temp=a;a=b;b=temp;</item>
+        <item>Alternative way to swap two numbers: a=b-a; b=a-b; a=b-a;</item>
+        <item>Read the documentation</item>
+        <item>Java reserved words cannot be used for variable names</item>
+        <item>camelCaseIsOftenUsedForNamingVariables</item>
+        <item>Variable names cannot start with numbers</item>
+        <item>An int can be converted to double without casting</item>
+        <item>i=i+1 is the same as i++</item>
+        <item>s.toUpperCase() creates a new String</item>
+        <item>s = s.toUpperCase() to capitalize letters in a String</item>
+        <item>Use s1.indexOf(s2) !=-1  Check if a small string s2 is part of a string s2</item>
+        <item>Array length cannot be changed</item>
+        <item>2-D arrays are represented with two sets of brackets</item>
+        <item>String objects are immutable (unchangeable)</item>
+        <item>elements in String arrays are initialized to null</item>
+        <item>elements in int arrays are initialized zero</item>
+        <item>array indices go from 0 to length-1</item>
+        <item>int[] ary, make a pointer but no actual array!</item>
+        <item>int[] a = new int[2], a[0] = 40; a[1] = 42;</item>
+        <item>\"a\" is a String while \'a\' is a char</item>
+        <item>The last item in an array a with length c is a[c-1]</item>
+        <item>When comparing two booleans, \"&amp;&amp;\" is \"and\"; \"||\" is \"or\". </item>
+        <item>Use \"extends\" keyword when creating a subclass. i.e. public class a extends b {&#8230;}</item>
+        <item>someString.contains(\"UIUC\") is the same as someString.indexOf(\"UIUC\") != -1</item>
+        <item>array[0] is the first element of an array.</item>
+        <item>array[array.length - 1] is the last element of an array.</item>
+    </string-array>
+
+
+</resources>
