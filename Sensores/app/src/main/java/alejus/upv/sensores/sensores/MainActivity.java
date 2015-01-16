@@ -14,11 +14,14 @@ import android.widget.TextView;
 import java.util.List;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements SensorEventListener{
 
     private TextView output;
     private float[] accelerometerValues;
     private float[] magneticFieldValues;
+    private Sensor mMagneticField;
+    private Sensor mAccelerometer;
+    private SensorManager mSensorManager;
 
 
     @Override
@@ -30,7 +33,9 @@ public class MainActivity extends ActionBarActivity {
         /*The sensor manager is used to manage the sensor hardware available on Android devices
         * Use <getSystemService> to return a reference to the Sensor Manager Service:*/
         String service_name = Context.SENSOR_SERVICE;
-        SensorManager sensorManager = (SensorManager) getSystemService(service_name);
+        mSensorManager = (SensorManager) getSystemService(service_name);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         /*Rather than interacting with the sensor hardware directly, they are represented by
         * sensor objects that describe the properties of the hardware sensor that represents.
         * Now its time to find the sensors available in our device:*/
@@ -42,8 +47,6 @@ public class MainActivity extends ActionBarActivity {
             showSensor(sensor.getName());
         }
         output.setMovementMethod(new ScrollingMovementMethod());*/
-        registerAccelerometerAndMagnetometer(sensorManager);
-        calculateOrientation();
     }
 
     private void calculateOrientation() {
@@ -60,39 +63,53 @@ public class MainActivity extends ActionBarActivity {
         values[2] = (float) Math.toDegrees(values[2]); // Roll
     }
 
-    private void registerAccelerometerAndMagnetometer(SensorManager sm) {
-        Sensor aSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Sensor mfSensor = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
-        sm.registerListener(myAccelerometerListener,
-                aSensor,
-                SensorManager.SENSOR_DELAY_UI);
-
-        sm.registerListener(myMagneticFieldListener,
-                mfSensor,
-                SensorManager.SENSOR_DELAY_UI);
-    }
-    final SensorEventListener myAccelerometerListener = new SensorEventListener() {
-        public void onSensorChanged(SensorEvent sensorEvent) {
-            if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-                accelerometerValues = sensorEvent.values;
-        }
-
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-    };
-
-    final SensorEventListener myMagneticFieldListener = new SensorEventListener() {
-        public void onSensorChanged(SensorEvent sensorEvent) {
-            if (sensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
-                magneticFieldValues = sensorEvent.values;
-        }
-
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-    };
     /*private void showSensor(String string) {
         output.append(string + "\n");
     }*/
 
+    /*It's also important to note that this example uses the onResume() and onPause() callback methods
+    to register and unregister the sensor event listener. As a best practice you should always disable
+    sensors you don't need, especially when your activity is paused. Failing to do so can drain the battery
+    in just a few hours because some sensors have substantial power requirements and can use up battery power quickly.
+    The system will not disable sensors automatically when the screen turns off.*/
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSensorManager.unregisterListener(this);
+    }
+
+
+    @Override
+    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // Do something here if sensor accuracy changes
+    }
+
+    @Override
+    public final void onSensorChanged(SensorEvent event) {
+        // Which sensor change ?
+        //float mMagnetConsum = mMagneticField.getPower();
+        synchronized (this){
+            switch (event.sensor.getType()){
+                case Sensor.TYPE_ACCELEROMETER:
+                    accelerometerValues = event.values;
+                    break;
+                case Sensor.TYPE_MAGNETIC_FIELD:
+                    magneticFieldValues = event.values;
+                    break;
+                default:
+                    //TODO
+            }
+            calculateOrientation();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -115,10 +132,5 @@ public class MainActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
-    /*It's also important to note that this example uses the onResume() and onPause() callback methods
-    to register and unregister the sensor event listener. As a best practice you should always disable
-    sensors you don't need, especially when your activity is paused. Failing to do so can drain the battery
-    in just a few hours because some sensors have substantial power requirements and can use up battery power quickly.
-    The system will not disable sensors automatically when the screen turns off.*/
 
 }
