@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -19,6 +20,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private TextView output;
     private float[] accelerometerValues;
     private float[] magneticFieldValues;
+    private float[] rotationMatrix = new float[9];
+    private float[] I = new float[9];
+    private float[] orientationVals = new float[3];
     private Sensor mMagneticField;
     private Sensor mAccelerometer;
     private SensorManager mSensorManager;
@@ -36,6 +40,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         mSensorManager = (SensorManager) getSystemService(service_name);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        Log.d("onCreate","Done!");
         /*Rather than interacting with the sensor hardware directly, they are represented by
         * sensor objects that describe the properties of the hardware sensor that represents.
         * Now its time to find the sensors available in our device:*/
@@ -48,21 +53,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
         output.setMovementMethod(new ScrollingMovementMethod());*/
     }
-
-    private void calculateOrientation() {
-        float[] values = new float[3];
-        float[] R = new float[9];
-        SensorManager.getRotationMatrix(R, null,
-                accelerometerValues,
-                magneticFieldValues);
-        SensorManager.getOrientation(R, values);
-
-        // Convert from radians to degrees if preferred.
-        values[0] = (float) Math.toDegrees(values[0]); // Azimuth
-        values[1] = (float) Math.toDegrees(values[1]); // Pitch
-        values[2] = (float) Math.toDegrees(values[2]); // Roll
-    }
-
 
     /*private void showSensor(String string) {
         output.append(string + "\n");
@@ -77,7 +67,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, mMagneticField, SensorManager.SENSOR_DELAY_UI);
+        Log.d("onResume","mMagneticField registerListener");
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
+        Log.d("onResume","mAccelerometer registerListener");
     }
 
     @Override
@@ -94,20 +86,38 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-        // Which sensor change ?
-        //float mMagnetConsum = mMagneticField.getPower();
-        synchronized (this){
-            switch (event.sensor.getType()){
-                case Sensor.TYPE_ACCELEROMETER:
-                    accelerometerValues = event.values;
-                    break;
-                case Sensor.TYPE_MAGNETIC_FIELD:
-                    magneticFieldValues = event.values;
-                    break;
-                default:
-                    //TODO
+        Log.d("onSensorChanged","Starting onSensorChanged");
+    // Which sensor change ?
+    //float mMagnetConsum = mMagneticField.getPower();
+        switch (event.sensor.getType()){
+            case Sensor.TYPE_ACCELEROMETER:{
+                accelerometerValues = event.values.clone();
+                break;}
+            case Sensor.TYPE_MAGNETIC_FIELD:{
+                magneticFieldValues = event.values.clone();
+                break;}
+            default:
+                break;
+        }
+        if (accelerometerValues != null && magneticFieldValues != null) {
+            Log.d("onSensorChanged", "Trying to obtain rotationMatrix");
+            boolean success = SensorManager.getRotationMatrix(rotationMatrix, I,
+                    accelerometerValues,
+                    magneticFieldValues);
+            Log.d("onSensorChanged", "Success is " + success);
+            if (success) {
+                SensorManager.getOrientation(rotationMatrix, orientationVals);
+
+                // Convert from radians to degrees if preferred.
+                orientationVals[0] = (float) Math.toDegrees(orientationVals[0]); // Azimuth
+                orientationVals[1] = (float) Math.toDegrees(orientationVals[1]); // Pitch
+                orientationVals[2] = (float) Math.toDegrees(orientationVals[2]); // Roll
+                //TODO show orientation view
+                output.setText(String.valueOf(orientationVals[2]));//Display Roll
             }
-            calculateOrientation();
+        }
+        else{
+            Log.d("onSensorChanged", "accelerometerValues = null && || magneticFieldValues = null");
         }
     }
 
