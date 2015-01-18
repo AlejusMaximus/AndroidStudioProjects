@@ -14,14 +14,32 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:text="@string/intro" />
-    <TextView
 
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:id="@+id/output"
+        android:id="@+id/azimuth"
         android:maxLines = "15"
-        android:layout_below="@id/textView1"
-        android:scrollbars = "vertical"/>
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:scrollbars = "vertical"
+        android:layout_below="@+id/textView1"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="70dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/pitch"
+        android:layout_below="@+id/azimuth"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/roll"
+        android:layout_below="@+id/pitch"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

@@ -17,7 +17,9 @@ import java.util.List;
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener{
 
-    private TextView output;
+    private TextView Azimuth;
+    private TextView Pitch;
+    private TextView Roll;
     private float[] accelerometerValues;
     private float[] magneticFieldValues;
     private float[] rotationMatrix = new float[9];
@@ -26,6 +28,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private Sensor mMagneticField;
     private Sensor mAccelerometer;
     private SensorManager mSensorManager;
+    private float mLowPassAzimuth = 0.0f;
+    private float mLowPassPitch = 0.0f;
+    private float mLowPassRoll = 0.0f;
 
 
     @Override
@@ -33,7 +38,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         /*Link with our layout*/
-        output = (TextView) findViewById(R.id.output);
+        Azimuth = (TextView) findViewById(R.id.azimuth);
+        Pitch = (TextView) findViewById(R.id.pitch);
+        Roll = (TextView) findViewById(R.id.roll);
         /*The sensor manager is used to manage the sensor hardware available on Android devices
         * Use <getSystemService> to return a reference to the Sensor Manager Service:*/
         String service_name = Context.SENSOR_SERVICE;
@@ -76,6 +83,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        Log.d("onPause","unregisterListener(this)");
     }
 
 
@@ -86,7 +94,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
-        Log.d("onSensorChanged","Starting onSensorChanged");
+       // Log.d("onSensorChanged","Starting onSensorChanged");
     // Which sensor change ?
     //float mMagnetConsum = mMagneticField.getPower();
         switch (event.sensor.getType()){
@@ -100,25 +108,38 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 break;
         }
         if (accelerometerValues != null && magneticFieldValues != null) {
-            Log.d("onSensorChanged", "Trying to obtain rotationMatrix");
+            //Log.d("onSensorChanged", "Trying to obtain rotationMatrix");
             boolean success = SensorManager.getRotationMatrix(rotationMatrix, I,
                     accelerometerValues,
                     magneticFieldValues);
-            Log.d("onSensorChanged", "Success is " + success);
+            //Log.d("onSensorChanged", "Success is " + success);
             if (success) {
                 SensorManager.getOrientation(rotationMatrix, orientationVals);
 
-                // Convert from radians to degrees if preferred.
-                orientationVals[0] = (float) Math.toDegrees(orientationVals[0]); // Azimuth
-                orientationVals[1] = (float) Math.toDegrees(orientationVals[1]); // Pitch
-                orientationVals[2] = (float) Math.toDegrees(orientationVals[2]); // Roll
-                //TODO show orientation view
-                output.setText(String.valueOf(orientationVals[2]));//Display Roll
+                float azimuth = (float) Math.toDegrees(orientationVals[0]); // Azimuth
+                float pitch = (float) Math.toDegrees(orientationVals[1]); // Pitch
+                float roll = (float) Math.toDegrees(orientationVals[2]); // Roll
+                //simple low pass filter signal processing
+                mLowPassAzimuth = lowPass(azimuth,mLowPassAzimuth);
+                mLowPassPitch = lowPass(pitch,mLowPassPitch);
+                mLowPassRoll = lowPass(roll,mLowPassRoll);
+
+                Azimuth.setText("Azimuth: "+String.valueOf(Math.round(mLowPassAzimuth)));//Display Azimuth
+                Pitch.setText("Pitch: "+String.valueOf(Math.round(mLowPassPitch)));//Display Pitch
+                Roll.setText("Roll: "+String.valueOf(Math.round(mLowPassRoll)));//Display Roll
+            }
+            else{
+                //Log.d("onSensorChanged", "success is false");
             }
         }
         else{
-            Log.d("onSensorChanged", "accelerometerValues = null && || magneticFieldValues = null");
+            //Log.d("onSensorChanged", "accelerometerValues = null && || magneticFieldValues = null");
         }
+    }
+    //Simple low-pass filter
+    private float lowPass(float current, float last) {
+        float a = 0.1f;
+        return last*(1.0f - a) + current*a;
     }
 
     @Override

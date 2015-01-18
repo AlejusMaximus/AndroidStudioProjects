@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Sensores</string>
-    <string name="intro">Your device has available the following sensors:</string>
+    <string name="intro">See your phone orientation:</string>
     <string name="action_settings">Settings</string>
 
 </resources>
