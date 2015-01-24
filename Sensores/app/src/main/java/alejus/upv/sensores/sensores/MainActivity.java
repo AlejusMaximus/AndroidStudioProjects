@@ -31,6 +31,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private float mLowPassAzimuth = 0.0f;
     private float mLowPassPitch = 0.0f;
     private float mLowPassRoll = 0.0f;
+    private float mHighPassAzimuth = 0.0f;
+    private float mHighPassPitch = 0.0f;
+    private float mHighPassRoll = 0.0f;
+    private float mLastAzimuth = 0.0f;
+    private float mLastPitch = 0.0f;
+    private float mLastRoll = 0.0f;
 
 
     @Override
@@ -115,14 +121,21 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             //Log.d("onSensorChanged", "Success is " + success);
             if (success) {
                 SensorManager.getOrientation(rotationMatrix, orientationVals);
-
                 float azimuth = (float) Math.toDegrees(orientationVals[0]); // Azimuth
                 float pitch = (float) Math.toDegrees(orientationVals[1]); // Pitch
                 float roll = (float) Math.toDegrees(orientationVals[2]); // Roll
+                //Bandpass filer = high pass filter and then low pass filter
+                //simple high pass filter signal processing
+                mHighPassAzimuth = highPass(azimuth, mLastAzimuth, mHighPassAzimuth);
+                mHighPassPitch = highPass(pitch, mLastPitch, mHighPassPitch);
+                mHighPassRoll = highPass(roll, mLastRoll, mHighPassRoll);
+                mLastAzimuth = azimuth;
+                mLastPitch = pitch;
+                mLastRoll = roll;
                 //simple low pass filter signal processing
-                mLowPassAzimuth = lowPass(azimuth,mLowPassAzimuth);
-                mLowPassPitch = lowPass(pitch,mLowPassPitch);
-                mLowPassRoll = lowPass(roll,mLowPassRoll);
+                mLowPassAzimuth = lowPass(mHighPassAzimuth,mLowPassAzimuth);
+                mLowPassPitch = lowPass(mHighPassPitch,mLowPassPitch);
+                mLowPassRoll = lowPass(mHighPassRoll,mLowPassRoll);
 
                 Azimuth.setText("Azimuth: "+String.valueOf(Math.round(mLowPassAzimuth)));//Display Azimuth
                 Pitch.setText("Pitch: "+String.valueOf(Math.round(mLowPassPitch)));//Display Pitch
@@ -136,11 +149,29 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             //Log.d("onSensorChanged", "accelerometerValues = null && || magneticFieldValues = null");
         }
     }
-    //Simple low-pass filter
+    /*
+    Simple low-pass filter
+     */
     private float lowPass(float current, float last) {
-        float a = 0.1f;
+        //Simple low-pass filter
+        float a = 0.3f;//Smoothing parameter
         return last*(1.0f - a) + current*a;
     }
+    //TODO: implement Hanning filter
+    //y[n] = 1/4*(x[n], 2*x[n-1], x[n-2]) [pag 114 pdf DSP book]
+
+    /*
+    Simple high-pass filter
+     */
+    private float highPass(float current, float last, float filtered) {
+        //Simple high-pass filter
+        float a = 0.7f;//Smoothing parameter
+        return a*(filtered+current-last);
+    }
+    /*
+    Bandpass filter = apply a high pass filer and then a low pass filter
+     */
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
