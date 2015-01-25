@@ -37,7 +37,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private float mLastAzimuth = 0.0f;
     private float mLastPitch = 0.0f;
     private float mLastRoll = 0.0f;
-
+    /*
+    MovingAverage mMovingAverageAzimuth;
+    MovingAverage mMovingAveragePitch;
+    MovingAverage mMovingAverageRoll;
+    */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +57,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         mSensorManager = (SensorManager) getSystemService(service_name);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        /*
+        Create a Moving Average filter:
+
+        mMovingAverageAzimuth = new MovingAverage(20);
+        mMovingAveragePitch = new MovingAverage(20);
+        mMovingAverageRoll = new MovingAverage(20);
+        */
         Log.d("onCreate","Done!");
         /*Rather than interacting with the sensor hardware directly, they are represented by
         * sensor objects that describe the properties of the hardware sensor that represents.
@@ -124,6 +135,17 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 float azimuth = (float) Math.toDegrees(orientationVals[0]); // Azimuth
                 float pitch = (float) Math.toDegrees(orientationVals[1]); // Pitch
                 float roll = (float) Math.toDegrees(orientationVals[2]); // Roll
+                /*
+                Using moving average filter, Push the newly collected sensor value:
+
+                mMovingAverageAzimuth.pushValue(azimuth);
+                mMovingAveragePitch.pushValue(pitch);
+                mMovingAverageRoll.pushValue(roll);
+                //Get the averaged value:
+                float mSMAAzimuth = mMovingAverageAzimuth.getValue();
+                float mSMAPitch = mMovingAveragePitch.getValue();
+                float mSMARoll = mMovingAverageRoll.getValue();
+                */
                 //Bandpass filer = high pass filter and then low pass filter
                 //simple high pass filter signal processing
                 mHighPassAzimuth = highPass(azimuth, mLastAzimuth, mHighPassAzimuth);
