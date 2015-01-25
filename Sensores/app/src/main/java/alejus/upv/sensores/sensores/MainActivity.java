@@ -1,6 +1,7 @@
 package alejus.upv.sensores.sensores;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -8,11 +9,13 @@ import android.hardware.SensorManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
+import android.view.WindowManager;
 import android.widget.TextView;
-
-import java.util.List;
+import android.widget.Toast;
 
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener{
@@ -28,16 +31,22 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private Sensor mMagneticField;
     private Sensor mAccelerometer;
     private SensorManager mSensorManager;
-    private float mLowPassAzimuth = 0.0f;
-    private float mLowPassPitch = 0.0f;
-    private float mLowPassRoll = 0.0f;
+    MovingAverage mMovingAverageAzimuth;
+    MovingAverage mMovingAveragePitch;
+    MovingAverage mMovingAverageRoll;
+    /*
+    private float mLastAzimuthLPF = 0.0f;
+    private float mLastPitchLPF = 0.0f;
+    private float mLastRollLPF = 0.0f;
+    private float mPastAzimuthLPF = 0.0f;
+    private float mPastPitchLPF = 0.0f;
+    private float mPastRollLPF = 0.0f;
     private float mHighPassAzimuth = 0.0f;
     private float mHighPassPitch = 0.0f;
     private float mHighPassRoll = 0.0f;
-    private float mLastAzimuth = 0.0f;
-    private float mLastPitch = 0.0f;
-    private float mLastRoll = 0.0f;
-    /*
+    private float mLastAzimuthHPF = 0.0f;
+    private float mLastPitchHPF = 0.0f;
+    private float mLastRollHPF = 0.0f;
     MovingAverage mMovingAverageAzimuth;
     MovingAverage mMovingAveragePitch;
     MovingAverage mMovingAverageRoll;
@@ -59,11 +68,56 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         mMagneticField = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         /*
         Create a Moving Average filter:
-
-        mMovingAverageAzimuth = new MovingAverage(20);
-        mMovingAveragePitch = new MovingAverage(20);
-        mMovingAverageRoll = new MovingAverage(20);
         */
+        int sizeBuffer = 25;
+        mMovingAverageAzimuth = new MovingAverage(sizeBuffer);
+        mMovingAveragePitch = new MovingAverage(sizeBuffer);
+        mMovingAverageRoll = new MovingAverage(sizeBuffer);
+        /*
+        Finding the screen orientation relative to the natural orientation
+         */
+        String windowSrvc = Context.WINDOW_SERVICE;
+        WindowManager wm = ((WindowManager) getSystemService(windowSrvc));
+        Display display = wm.getDefaultDisplay();
+        int rotation = display.getRotation();
+        switch(rotation){
+            case (Surface.ROTATION_0):
+                Toast.makeText(this, "Natural", Toast.LENGTH_SHORT).show();
+                break;
+            case (Surface.ROTATION_90):
+                Toast.makeText(this, "On its left side", Toast.LENGTH_SHORT).show();
+                break;
+            case (Surface.ROTATION_180):
+                Toast.makeText(this, "Upside down", Toast.LENGTH_SHORT).show();
+                break;
+            case (Surface.ROTATION_270):
+                Toast.makeText(this, "On its right side", Toast.LENGTH_SHORT).show();
+                break;
+            default: break;
+
+        }
+        /*
+        OPTIONAL remapping the Orientation reference frame
+        http://developer.android.com/reference/android/hardware/SensorManager.html#remapCoordinateSystem%28float%5B%5D,%20int,%20int,%20float%5B%5D%29
+        http://stackoverflow.com/questions/18782829/android-sensormanager-strange-how-to-remapcoordinatesystem
+         */
+        /*
+        Find device orientation
+        http://developer.android.com/reference/android/content/res/Configuration.html
+         */
+
+        Configuration config = getResources().getConfiguration();
+
+        if(config.orientation == Configuration.ORIENTATION_PORTRAIT){
+            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+        }
+        else if(config.orientation == Configuration.ORIENTATION_LANDSCAPE){
+            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+        }
+        /*
+        NOTE: This methods to find device orientation are not useful if in the AndroidManifest
+        portrait or landscape mode is hardcoded.
+         */
         Log.d("onCreate","Done!");
         /*Rather than interacting with the sensor hardware directly, they are represented by
         * sensor objects that describe the properties of the hardware sensor that represents.
@@ -135,33 +189,75 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 float azimuth = (float) Math.toDegrees(orientationVals[0]); // Azimuth
                 float pitch = (float) Math.toDegrees(orientationVals[1]); // Pitch
                 float roll = (float) Math.toDegrees(orientationVals[2]); // Roll
-                /*
-                Using moving average filter, Push the newly collected sensor value:
+
+                //Using moving average filter, Push the newly collected sensor value:
 
                 mMovingAverageAzimuth.pushValue(azimuth);
                 mMovingAveragePitch.pushValue(pitch);
                 mMovingAverageRoll.pushValue(roll);
+
                 //Get the averaged value:
                 float mSMAAzimuth = mMovingAverageAzimuth.getValue();
                 float mSMAPitch = mMovingAveragePitch.getValue();
                 float mSMARoll = mMovingAverageRoll.getValue();
-                */
-                //Bandpass filer = high pass filter and then low pass filter
-                //simple high pass filter signal processing
-                mHighPassAzimuth = highPass(azimuth, mLastAzimuth, mHighPassAzimuth);
-                mHighPassPitch = highPass(pitch, mLastPitch, mHighPassPitch);
-                mHighPassRoll = highPass(roll, mLastRoll, mHighPassRoll);
-                mLastAzimuth = azimuth;
-                mLastPitch = pitch;
-                mLastRoll = roll;
-                //simple low pass filter signal processing
-                mLowPassAzimuth = lowPass(mHighPassAzimuth,mLowPassAzimuth);
-                mLowPassPitch = lowPass(mHighPassPitch,mLowPassPitch);
-                mLowPassRoll = lowPass(mHighPassRoll,mLowPassRoll);
 
+                /*
+                Bandpass filer = high pass filter and then low pass filter
+                 */
+                /*
+                simple high pass filter signal processing
+                private float highPass(float current, float last, float filtered)
+                Note:has not a good result for orientation sensors
+                 */
+                /*
+                mHighPassAzimuth = highPass(azimuth, mLastAzimuthHPF, mHighPassAzimuth);
+                mHighPassPitch = highPass(pitch, mLastPitchHPF, mHighPassPitch);
+                mHighPassRoll = highPass(roll, mLastRollHPF, mHighPassRoll);
+                mLastAzimuthHPF = azimuth;
+                mLastPitchHPF = pitch;
+                mLastRollHPF = roll;
+                */
+                /*
+                simple low pass filter signal processing
+                private float lowPass(float current, float last)
+                 */
+
+                /*
+                float mLowPassAzimuth = lowPass(azimuth,mLastAzimuthLPF);
+                float mLowPassPitch = lowPass(pitch,mLastPitchLPF);
+                float mLowPassRoll = lowPass(roll,mLastRollLPF);
+                // x[n-1] <- x[n]
+                mLastAzimuthLPF = azimuth;
+                mLastPitchLPF = pitch;
+                mLastRollLPF = roll;
+                */
+
+                /*
+                Using Hanning filter instead of simple low pass filter
+                private float hanningFilter(float current, float last, float past)
+                */
+                /*
+                float mLowPassAzimuth = hanningFilter(azimuth,mLastAzimuthLPF,mPastAzimuthLPF);
+                float mLowPassPitch = hanningFilter(pitch, mLastPitchLPF,mPastPitchLPF);
+                float mLowPassRoll = hanningFilter(roll, mLastRollLPF, mPastRollLPF);
+                // x[n-2] <- x[n-1]
+                mPastAzimuthLPF = mLastAzimuthLPF;
+                mPastPitchLPF = mLastPitchLPF;
+                mPastRollLPF =  mLastRollLPF;
+                // x[n-1] <- x[n]
+                mLastAzimuthLPF = azimuth;
+                mLastPitchLPF = pitch;
+                mLastRollLPF = roll;
+                */
+                /*
                 Azimuth.setText("Azimuth: "+String.valueOf(Math.round(mLowPassAzimuth)));//Display Azimuth
                 Pitch.setText("Pitch: "+String.valueOf(Math.round(mLowPassPitch)));//Display Pitch
                 Roll.setText("Roll: "+String.valueOf(Math.round(mLowPassRoll)));//Display Roll
+                */
+                Azimuth.setText("Azimuth: "+String.valueOf(Math.round(mSMAAzimuth)));//Display Azimuth
+                Pitch.setText("Pitch: "+String.valueOf(Math.round(mSMAPitch)));//Display Pitch
+                Roll.setText("Roll: "+String.valueOf(Math.round(mSMARoll)));//Display Roll
+
             }
             else{
                 //Log.d("onSensorChanged", "success is false");
@@ -176,18 +272,24 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
      */
     private float lowPass(float current, float last) {
         //Simple low-pass filter
-        float a = 0.3f;//Smoothing parameter
+        float a = 0.2f;//Smoothing parameter
         return last*(1.0f - a) + current*a;
     }
-    //TODO: implement Hanning filter
-    //y[n] = 1/4*(x[n], 2*x[n-1], x[n-2]) [pag 114 pdf DSP book]
+
+    /*
+    One of the simplest smoothing filters is the Hanning moving average filter
+    y[n] = 1/4*(x[n]+ 2*x[n-1]+ x[n-2]) [pag 114 pdf DSP book]
+    */
+    private float hanningFilter(float current, float last, float past){
+        return 0.25f*current + 0.5f*last +0.25f*past;
+    }
 
     /*
     Simple high-pass filter
      */
     private float highPass(float current, float last, float filtered) {
         //Simple high-pass filter
-        float a = 0.7f;//Smoothing parameter
+        float a = 0.9f;//Smoothing parameter
         return a*(filtered+current-last);
     }
     /*
@@ -216,5 +318,19 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         return super.onOptionsItemSelected(item);
     }
+    /*
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+        }
+    }
+    */
+
 
 }
