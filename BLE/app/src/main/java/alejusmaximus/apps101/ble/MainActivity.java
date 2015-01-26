@@ -22,8 +22,10 @@ THE SOFTWARE.
 */
 package alejusmaximus.apps101.ble;
 
+import android.bluetooth.BluetoothAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -34,6 +36,28 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        /*
+        STEP 1: GET BLUETOOTH ADAPTER
+        The BluetoothAdapter is required for any and all Bluetooth activity. To get the BluetoothAdapter,
+        call the static getDefaultAdapter() method. This returns a BluetoothAdapter that represents the device's
+        own Bluetooth adapter (the Bluetooth radio). There's one Bluetooth adapter for the entire system, and your
+        application can interact with it using this object. If getDefaultAdapter() returns null, then the device
+        does not support Bluetooth and your story ends here. For example:
+        */
+
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Log.d("onCreate", "Device does not support Bluetooth :-(");
+        }else{
+            Log.d("onCreate", "Device support Bluetooth :-D");
+        }
+        /*
+        STEP 2: Enable Bluetooth
+
+        */
+
+
+
     }
 
 
