@@ -6,10 +6,10 @@ import numpy as np
 #b = signal.firwin(80, 0.5, window=('kaiser', 8))
 
 #-------------------------Low Pass filter to sensor data----------------------
-sp = 0.5  # Smoothing Parameter recommended values: 0.5>=factor>=0.02
+#sp = 0.5  # Smoothing Parameter recommended values: 0.5>=factor>=0.02
 #Low pass filer from Android Sensor programming
-b = np.array([sp, (1-sp)])
-a =1
+#b = np.array([sp, (1-sp)])
+#a =1
 
 #Hanning filter
 #b = np.array([0.25, 0.5, 0.25])
@@ -18,6 +18,12 @@ a =1
 #High Pass filter Android Sensor book
 #b = np.array([sp, -sp])
 #a = np.array([1, -sp])
+
+#Moving average filer
+k = 25 #circular buffer length
+b = np.ones(k)/k
+a = 1
+
 
 w, h = signal.freqz(b, a)  # compute the frequency response of a digital filter
 
