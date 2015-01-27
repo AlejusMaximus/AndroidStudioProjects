@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="alejusmaximus.apps101.ble" >
-
+    package="alejusmaximus.apps101.bluev2edr" >
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -20,5 +18,5 @@
             </intent-filter>
         </activity>
     </application>
-    
+
 </manifest>
