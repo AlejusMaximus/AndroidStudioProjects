@@ -39,18 +39,41 @@ General features for both:  Bluetooth V2.0+EDR (Enhanced Data Rate) 3Mbps
 package alejusmaximus.apps101.bluev2edr;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
+import java.util.Set;
 
 
 public class MainActivity extends ActionBarActivity {
 
-    private final static int REQUEST_ENABLE_BT = 1;
+    // Intent request codes
+    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+    private static final int REQUEST_ENABLE_BT = 3;
+    /**
+     * Local Bluetooth adapter
+     */
+    private BluetoothAdapter mBluetoothAdapter = null;
+
+    /**
+     * Array adapter for the conversation thread
+     */
+    private ArrayAdapter<String> mArrayAdapter;
+    /**
+     * Newly discovered devices
+     */
+    //private ArrayAdapter<String> mNewDevicesArrayAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +87,7 @@ public class MainActivity extends ActionBarActivity {
         application can interact with it using this object. If getDefaultAdapter() returns null, then the device
         does not support Bluetooth and your story ends here. For example:
         */
-
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
             Log.d("onCreate", "Device does not support Bluetooth :-(");
         }else{
@@ -81,12 +103,81 @@ public class MainActivity extends ActionBarActivity {
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+        /*
+        STEP 3: Querying paired devices
+        Before performing device discovery, its worth querying the set of paired devices to see if the desired device is already known.
+        To do so, call getBondedDevices(). This will return a Set of BluetoothDevices representing paired devices.
+        For example, you can query all paired devices and then show the name of each device to the user, using an ArrayAdapter:
+         */
+        // Initialize array adapters. One for already paired devices and
+        // one for newly discovered devices
+        ArrayAdapter<String> pairedDevicesArrayAdapter =
+                new ArrayAdapter<String>(this, R.layout.device_name);
 
+        //mNewDevicesArrayAdapter = new ArrayAdapter<String>(this, R.layout.device_name);
+
+        // Find and set up the ListView for paired devices
+        ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
+
+        pairedListView.setAdapter(pairedDevicesArrayAdapter);
+
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+
+        // If there are paired devices, add each one to the ArrayAdapter
+        // DeviceListActivity.java from Android Developers!
+        if (pairedDevices.size() > 0) {
+            findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
+            for (BluetoothDevice device : pairedDevices) {
+                pairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+            }
+        }else {
+            String noDevices = getResources().getText(R.string.none_paired).toString();
+            pairedDevicesArrayAdapter.add(noDevices);
         }
 
+    }
+    /*
+    BluetoothChatFragment.java from Android Developers!
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        // If BT is not on, request that it be enabled.
+        // setupChat() will then be called during onActivityResult
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+            // Otherwise, setup the chat session
+        } else if (mChatService == null) {
+            setupChat();
+        }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mChatService != null) {
+            mChatService.stop();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Performing this check in onResume() covers the case in which BT was
+        // not enabled during onStart(), so we were paused to enable it...
+        // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
+        if (mChatService != null) {
+            // Only if the state is STATE_NONE, do we know that we haven't started already
+            if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
+                // Start the Bluetooth chat services
+                mChatService.start();
+            }
+        }
+    }
+    */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
