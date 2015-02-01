@@ -51,15 +51,18 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.Set;
 
 
 public class MainActivity extends ActionBarActivity {
 
+    protected static final String TAG = "BLUETOOTH";
     // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
-    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
-    private static final int REQUEST_ENABLE_BT = 3;
+    //private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+    //private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+    private static final int ENABLE_BLUETOOTH = 1;
+    protected static final int DISCOVERY_REQUEST = 1;
     /**
      * Local Bluetooth adapter
      */
@@ -87,11 +90,15 @@ public class MainActivity extends ActionBarActivity {
         application can interact with it using this object. If getDefaultAdapter() returns null, then the device
         does not support Bluetooth and your story ends here. For example:
         */
+
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Log.d(TAG, "mBluetoothAdapter is = " + mBluetoothAdapter );
+
         if (mBluetoothAdapter == null) {
-            Log.d("onCreate", "Device does not support Bluetooth :-(");
+            Log.d(TAG, "Device does not support Bluetooth :-(");
+            Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
         }else{
-            Log.d("onCreate", "Device support Bluetooth :-D");
+            Log.d(TAG, "Device support Bluetooth :-D");
         }
         /*
         STEP 2: Enable Bluetooth
@@ -100,11 +107,20 @@ public class MainActivity extends ActionBarActivity {
         startActivityForResult() with the ACTION_REQUEST_ENABLE action Intent. This will issue a request to enable Bluetooth
         through the system settings (without stopping your application). For example:
         */
-        if (!mBluetoothAdapter.isEnabled()) {
+
+        if (!mBluetoothAdapter.isEnabled() && mBluetoothAdapter!= null) {
+            Log.d(TAG, "Bluetooth isn't enabled, prompt the user to turn it on");
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH);
+        }else{
+            Log.d(TAG, "Bluetooth is already enabled");
+            initBluetoothUI();
         }
-        /*
+    }
+
+    private void initBluetoothUI(){
+        Log.d(TAG, "initBluetoothUI()");
+         /*
         STEP 3: Querying paired devices
         Before performing device discovery, its worth querying the set of paired devices to see if the desired device is already known.
         To do so, call getBondedDevices(). This will return a Set of BluetoothDevices representing paired devices.
@@ -121,22 +137,47 @@ public class MainActivity extends ActionBarActivity {
         ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
 
         pairedListView.setAdapter(pairedDevicesArrayAdapter);
-
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        Log.d(TAG, "Accessing to mBluetoothAdapter " + mBluetoothAdapter);
+        Log.d(TAG, "trying to getBondedDevices...");
+        Log.d(TAG, "trying to getBondedDevices..."+ mBluetoothAdapter.getBondedDevices());
+        Set <BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
 
         // If there are paired devices, add each one to the ArrayAdapter
         // DeviceListActivity.java from Android Developers!
+        Log.d("onCreate", "trying to set up a list of paired devices");
         if (pairedDevices.size() > 0) {
+            Log.d("onCreate", "pairedDevices.size() > 0");
             findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             for (BluetoothDevice device : pairedDevices) {
                 pairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
             }
         }else {
+            Log.d("onCreate", "else:  No devices have been paired");
             String noDevices = getResources().getText(R.string.none_paired).toString();
             pairedDevicesArrayAdapter.add(noDevices);
         }
+        //TODO: select the device to communicate with
+    }
+
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == ENABLE_BLUETOOTH)
+            if (resultCode == RESULT_OK) {
+                Log.d(TAG, "Bluetooth has been enabled, initialize the UI");
+                initBluetoothUI();
+            }
+
+        /**
+         * Listing 16-4: Monitoring discoverability request approval
+         */
+        if (requestCode == DISCOVERY_REQUEST) {
+            if (resultCode == RESULT_CANCELED) {
+                Log.d(TAG, "Discovery cancelled by user");
+            }
+        }
 
     }
+
     /*
     BluetoothChatFragment.java from Android Developers!
 
