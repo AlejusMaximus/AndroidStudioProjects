@@ -92,7 +92,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         /*
         Create a Moving Average filter:
         */
-        int sizeBuffer = 25;
+        int sizeBuffer = 20;
         mMovingAverageAzimuth = new MovingAverage(sizeBuffer);
         mMovingAveragePitch = new MovingAverage(sizeBuffer);
         mMovingAverageRoll = new MovingAverage(sizeBuffer);
